@@ -1,0 +1,21 @@
+{
+	"prefix": "t!",
+	"verifyRole": "1016704626956963870",
+	"messages": {
+		"COOLDOWN_MESSAGE": "You are on `<duration>` cooldown!"
+	},
+	"territories": {
+        "BS": "Brimstone Sands",
+        "BW": "Brightwood",
+        "CK": "Cutlass Keys",
+        "EB": "Ebonscale Reach",
+        "EF": "Everfall",
+        "FL": "First Light",
+        "MB": "Monarch's Bluffs",
+        "MD": "Mourningdale",
+        "RW": "Reekwater",
+        "RS": "Restless Shores",
+        "WF": "Weaver's Fen",
+        "WW": "Windsward"
+    }
+}

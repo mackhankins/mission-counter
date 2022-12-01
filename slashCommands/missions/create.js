@@ -14,11 +14,12 @@ Object.keys(config.territories).forEach(function (key) {
 })
 
 const dates = []
+const date = new dayjs(new Date())
 for (i = 0; i <= 6; i++) {
-    let optionDate = dayjs().add(i, 'day')
+    const optionDate = date.add(i, 'day')
     dates.push({
-        name: optionDate.$M + '-' + optionDate.$D + '-' + optionDate.$y,
-        value: optionDate.$M + '-' + optionDate.$D + '-' + optionDate.$y,
+        name: optionDate.format('MM-DD-YYYY'),
+        value: optionDate.format('MM-DD-YYYY'),
     })
 }
 

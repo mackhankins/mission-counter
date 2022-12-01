@@ -13,7 +13,7 @@ async function processThreads(forumThreads) {
         let lastMessage = splitContent(await botMessages.first().content)
         totals[lastMessage[0]] = finalCount
     }
-    totals.sort()
+    totals.sort((a,b) => a[0].localeCompare(b[0]))
 
     var sumTotal = 0
     for (key in totals) {

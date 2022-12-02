@@ -8,12 +8,12 @@ async function processThreads(forumThreads) {
     for (let thread of await forumThreads) {
         let messageCollection = await thread[1].messages.fetch()
         let botMessages = await messageCollection.filter(m => m.author.id === client.user.id && m.content.startsWith("user:"))
-        if(botMessages.size === 0) continue
+        if (botMessages.size === 0) continue
         let finalCount = countMissions(await botMessages)
         let lastMessage = splitContent(await botMessages.first().content)
         totals[lastMessage[0]] = finalCount
     }
-    totals.sort((a,b) => a[0].localeCompare(b[0]))
+    totals.sort((a, b) => a[1].localeCompare(b[1]))
 
     var sumTotal = 0
     for (key in totals) {
@@ -66,15 +66,16 @@ module.exports = {
     },
 
     run: async (client, interaction) => {
-        const channelId = interaction.options.get('channel').value
-        if (channelId.toString()) {
+        if (interaction.type === 2) {
+            const channelId = interaction.options.get('channel').value
+            const parent = interaction.member.guild.channels.cache.get(channelId)
             const forum = await interaction.member.guild.channels.cache.filter(c => c.type === 11 && c.parentId === channelId)
             const totalArray = await processThreads(forum)
             const total = totalString(totalArray)
 
             const embed = new EmbedBuilder()
                 .setColor("#00FF00")
-                .setTitle('Missions')
+                .setTitle(longFormChannelName(parent.name) + ' Missions')
                 .setDescription(total)
                 .setTimestamp()
                 .setFooter({ text: `Requested by ${interaction.user.tag}`, iconURL: `${interaction.user.displayAvatarURL()}` })

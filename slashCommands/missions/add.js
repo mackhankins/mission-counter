@@ -3,7 +3,8 @@ const client = require("../../index")
 require("dotenv").config();
 const persistance = require("../../persistance")
 const config = require('../../config')
-const { longFormChannelName, countMissions } = require("../../utils")
+const { longFormChannelName, countMissions } = require("../../utils");
+const { channel } = require("diagnostics_channel");
 
 const missionCount = []
 for (i = 1; i <= 3; i++) {
@@ -67,10 +68,9 @@ module.exports = {
   },
 
   run: async (client, interaction) => {
-    const channelId = await interaction.options.get('channel').value
 
-    if (channelId.toString()) {
-
+    if (interaction.type === 2) {
+      const channelId = await interaction.options.get('channel').value
       const completed = await interaction.options.get('completed').value
       const screenShot = await interaction.options.get('screenshot')
 
@@ -111,7 +111,7 @@ module.exports = {
             ]
           }
         )
-    
+
         const embed = new EmbedBuilder()
           .setColor("#00FF00")
           .setTitle("Successful Submission")

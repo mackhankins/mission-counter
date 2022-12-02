@@ -28,7 +28,7 @@ module.exports = {
       options: [
         {
           type: 3,
-          name: 'channel',
+          name: 'push',
           description: 'select a push',
           required: true,
           autocomplete: true,
@@ -70,7 +70,7 @@ module.exports = {
   run: async (client, interaction) => {
 
     if (interaction.type === 2) {
-      const channelId = await interaction.options.get('channel').value
+      const channelId = await interaction.options.get('push').value
       const completed = await interaction.options.get('completed').value
       const screenShot = await interaction.options.get('screenshot')
 

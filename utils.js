@@ -9,7 +9,7 @@ function longFormChannelName(name) {
   
   function splitContent(content) {
     const start = `user: `;
-    const end = `missions: `;
+    const end = ` missions: `;
     const username = content.split(start)[1].split(end)[0]
     const missions = content.split(end)[1]
     return [username, missions]
@@ -32,9 +32,9 @@ function longFormChannelName(name) {
 
   function totalString(total) {
     let stringTotal = ''
-    for (key in total) {
-        stringTotal += key + ' : ' + total[key] + '\n'
-    }
+    total.forEach(item => {
+      stringTotal += item.name + ' : ' + item.count + '\n'
+    })
     return stringTotal
 }
 

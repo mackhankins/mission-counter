@@ -1,21 +1,19 @@
 const { EmbedBuilder, ApplicationCommandType } = require("discord.js")
 const persistance = require("../../persistance")
 const client = require("../../index");
-const { splitContent, countMissions, totalString, longFormChannelName } = require("../../utils")
+const { splitContent, countMissions, totalString, longFormChannelName, addOrReplace } = require("../../utils")
 
-async function processThreads(forumThreads) {
+async function processMessages(messages) {
     let totals = []
-    for (let thread of await forumThreads) {
-        let messageCollection = await thread[1].messages.fetch()
-        let botMessages = await messageCollection.filter(m => m.author.id === client.user.id && m.content.startsWith("user:"))
-        if (botMessages.size === 0) continue
-        let finalCount = countMissions(await botMessages)
-        let lastMessage = splitContent(await botMessages.first().content)
-        totals.push({
-            name: lastMessage[0],
-            count: finalCount
-        })
+    for (let message of await messages) {
+        let finalCount = countMissions(await message[1])
+        let lastMessage = splitContent(await message[1].content)
+            totals.push({
+                name: lastMessage[0],
+                count: finalCount
+            })
     }
+    totals = addOrReplace(totals)
     await totals.sort((a,b) => (a.count < b.count) ? 1 : -1)
 
     var sumTotal = 0
@@ -53,14 +51,15 @@ module.exports = {
         const countGuild = await persistance.count(guildID)
         if (!countGuild) return
         const guild = await persistance.find(guildID)
-        const server = await client.guilds.cache.get(guild.id)
-        const channels = await server.channels.cache.filter(c => c.parentId == guild.categoryId && c.type === 15)
-        channels.forEach(function (channel) {
-            choices.push({
-                name: longFormChannelName(channel.name),
-                value: channel.id,
-            })
-        })
+        const forum = await interaction.member.guild.channels.cache.get(guild.categoryId)
+        await forum.threads.fetchArchived()
+        const threads = await forum.threads.cache.filter(t => t.ownerId === process.env.CLIENT_ID && t.type === 11)
+        for (const thread of threads) {
+          choices.push({
+            name: longFormChannelName(thread[1].name),
+            value: thread[1].id,
+          })
+        }
         interaction.respond(choices).catch(console.error);
     },
 
@@ -68,8 +67,10 @@ module.exports = {
         if (interaction.type === 2) {
             const channelId = interaction.options.get('push').value
             const parent = await interaction.member.guild.channels.cache.get(channelId)
-            const forum = await interaction.member.guild.channels.cache.filter(c => c.type === 11 && c.parentId === channelId)
-            const totalArray = await processThreads(forum)
+            const messages = await parent.messages.fetch().then(ms => {
+                return ms.filter(m => m.author.id === process.env.CLIENT_ID && m.content.startsWith('user: '))
+              })
+            const totalArray = await processMessages(messages)
             const total = totalString(totalArray)
 
             const embed = new EmbedBuilder()

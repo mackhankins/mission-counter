@@ -56,18 +56,22 @@ module.exports = {
         const newChannel = pushLocation + '-' + pushDate
         const guildID = interaction.member.guild.id;
         const guild = await persistance.find(guildID)
-        const server = client.guilds.cache.get(guildID)
         if (!guild.id) {
             guildService.login(guildID)
         }
-        const channel = server.channels.cache.find(c => c.name.toLowerCase() === newChannel.toLowerCase() && c.parentId === guild.categoryId)
-        if (!channel) {
-            server.channels.create({
-                name: newChannel,
-                type: 15,
-                defaultSortOrder: 1,
-                parent: guild.categoryId,
-            })
+        const forum = await interaction.member.guild.channels.cache.get(guild.categoryId)
+        const thread = await forum.threads.cache.find(t => t.name.toLowerCase() === newChannel.toLowerCase())
+
+        if (!thread) {
+          await forum.threads.create({
+            name: newChannel.toLowerCase(),
+            autoArchiveDuration: 60,
+            message: {
+              content: 'tracking missions for ' + pushLocation + ' ' + pushDate,
+            },
+            reason: interaction.user.tag + ' is awesome.',
+          })
+
             const embed = new EmbedBuilder()
                 .setColor("#00FF00")
                 .setTitle("Created forum thread " + newChannel)

@@ -16,11 +16,20 @@ function longFormChannelName(name) {
   }
   
   function countMissions(messages) {
+    if (!messages || messages.size === 0) return count = 0
+
     count = 0
-    messages.forEach(m => {
-      missionValue = isNaN(splitContent(m.content)[1]) ? 0 : splitContent(m.content)[1]
+
+    if(messages.size > 0) {
+      messages.forEach(m => {
+        missionValue = isNaN(splitContent(m.content)[1]) ? 0 : splitContent(m.content)[1]
+        count = +missionValue + +count
+      })
+    } else {
+      missionValue = isNaN(splitContent(messages.content)[1]) ? 0 : splitContent(messages.content)[1]
       count = +missionValue + +count
-    })
+    }
+
     return count
   }
   
@@ -29,6 +38,13 @@ function longFormChannelName(name) {
       setTimeout(resolve, time);
     });
   }
+
+  function addOrReplace(arr){ 
+    const res = Array.from(arr.reduce(
+      (m, {name, count}) => m.set(name, (m.get(name) || 0) + count), new Map
+    ), ([name, count]) => ({name, count}));
+    return res
+   }
 
   function totalString(total) {
     let stringTotal = ''
@@ -43,4 +59,5 @@ exports.longFormChannelName = longFormChannelName
 exports.splitContent = splitContent
 exports.countMissions = countMissions
 exports.wait = wait
+exports.addOrReplace = addOrReplace
 exports.totalString = totalString

@@ -56,14 +56,14 @@ module.exports = {
     const countGuild = await persistance.count(guildID)
     if (!countGuild) return
     const guild = await persistance.find(guildID)
-    const server = client.guilds.cache.get(guild.id)
-    const channels = server.channels.cache.filter(c => c.parentId == guild.categoryId && c.type === 15)
-    channels.forEach(function (channel) {
+    const forum = await interaction.member.guild.channels.cache.get(guild.categoryId)
+    const threads = await forum.threads.cache.filter(t => t.ownerId === process.env.CLIENT_ID && t.type === 11 && t.archived === false)
+    for (const thread of threads) {
       choices.push({
-        name: longFormChannelName(channel.name),
-        value: channel.id,
+        name: longFormChannelName(thread[1].name),
+        value: thread[1].id,
       })
-    })
+    }
     interaction.respond(choices).catch(console.error);
   },
 
@@ -85,51 +85,20 @@ module.exports = {
         return
       }
 
-      const threadName = await interaction.user.username + interaction.user.discriminator
       const forum = await interaction.member.guild.channels.cache.get(channelId)
-      const thread = await forum.threads.cache.find(t => t.name.toLowerCase() === threadName.replace(/[^\w ]/, '').toLowerCase())
 
-      if (!thread) {
-        const thread = await forum.threads.create({
-          name: threadName.replace(/[^\w ]/, '').toLowerCase(),
-          autoArchiveDuration: 60,
-          message: {
-            content: 'tracking missions for ' + interaction.user.tag,
-          },
-          reason: interaction.user.tag + ' is awesome.',
-          type: ChannelType.PrivateThread,
-        })
+      const userMessages = await forum.messages.fetch().then(ms => {
+        return ms.filter(m => m.author.id === process.env.CLIENT_ID && m.content.startsWith('user: ' + interaction.user.tag))
+      })
 
+      const lastMissionCount = +countMissions(await userMessages) + +completed
 
-        thread.send(
-          {
-            content: 'user: ' + interaction.user.tag + ' missions: ' + completed,
-            files: [
-              {
-                attachment: screenShot.attachment.url,
-              }
-            ]
-          }
-        )
+      let attachmentDuplicate = false
 
-        const embed = new EmbedBuilder()
-          .setColor("#00FF00")
-          .setTitle("Successful Submission")
-          .setDescription('@' + interaction.user.tag + ' has completed ' + completed + ' missions!  Keep going')
-          .setTimestamp()
-          .setFooter({ text: `Requested by ${interaction.user.tag}`, iconURL: `${interaction.user.displayAvatarURL()}` })
-        interaction.reply({ embeds: [embed] });
-      } else {
+      if (userMessages) {
+        const messageWithAttachnent = await userMessages.filter(m => m.attachments.size > 0)
 
-        const messages = await thread.messages.fetch()
-
-        const messagesByBot = await messages.filter(mb => mb.author.id === client.user.id && mb.content.startsWith('user:'))
-
-        const lastMissionCount = +countMissions(messagesByBot) + +completed
-
-        const messageWithAttachnent = await messages.filter(m => m.attachments.size > 0)
-
-        const attachmentDuplicate = await messageWithAttachnent.some(function (m) {
+        attachmentDuplicate = await messageWithAttachnent.some(function (m) {
           m.attachments.some(a => {
             let oldAttachment = [{
               size: a.size,
@@ -151,7 +120,7 @@ module.exports = {
                   .setColor("#FF0000")
                   .setURL("https://example.org/")
                   .setImage(screenShot.attachment.url)
-                  .setTitle("Duplicate Found")
+                  .setTitle("Duplicate Found: " + longFormChannelName(forum.name))
                   .setDescription(`Sorry the two submissions appear to be a duplicate. \n Latency : ${client.ws.ping}ms`)
                   .setTimestamp()
                   .setFooter({ text: `Requested by ${interaction.user.tag}`, iconURL: `${interaction.user.displayAvatarURL()}` }),
@@ -166,27 +135,27 @@ module.exports = {
 
           return m = foundDuplicate
         })
+      }
 
-        if (!attachmentDuplicate) {
-          thread.send(
-            {
-              content: 'user: ' + interaction.user.tag + ' missions: ' + completed,
-              files: [
-                {
-                  attachment: screenShot.attachment.url,
-                }
-              ]
-            }
-          )
+      if (!attachmentDuplicate) {
+        forum.send(
+          {
+            content: 'user: ' + interaction.user.tag + ' missions: ' + completed,
+            files: [
+              {
+                attachment: screenShot.attachment.url,
+              }
+            ]
+          }
+        )
 
-          const embed = new EmbedBuilder()
-            .setColor("#00FF00")
-            .setTitle("Successful Submission")
-            .setDescription('@' + interaction.user.tag + ' has completed ' + lastMissionCount + ' missions!  Keep going')
-            .setTimestamp()
-            .setFooter({ text: `Requested by ${interaction.user.tag}`, iconURL: `${interaction.user.displayAvatarURL()}` })
-          interaction.reply({ embeds: [embed] });
-        }
+        const embed = new EmbedBuilder()
+          .setColor("#00FF00")
+          .setTitle("Successful Submission: " + longFormChannelName(forum.name))
+          .setDescription('@' + interaction.user.tag + ' has completed ' + lastMissionCount + ' missions!  Keep going')
+          .setTimestamp()
+          .setFooter({ text: `Requested by ${interaction.user.tag}`, iconURL: `${interaction.user.displayAvatarURL()}` })
+        interaction.reply({ embeds: [embed] });
       }
     }
   },

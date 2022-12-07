@@ -20,7 +20,7 @@ module.exports = {
     autocomplete: async (interaction, choices) => {
         const guildID = interaction.member.guild.id;
         const server = client.guilds.cache.get(guildID)
-        const channels = server.channels.cache.filter(c => c.type === ChannelType.GuildCategory)
+        const channels = server.channels.cache.filter(c => c.type === ChannelType.GuildForum)
         channels.forEach(function (channel) {
             choices.push({
                 name: channel.name,

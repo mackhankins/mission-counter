@@ -1,3 +1,4 @@
+const { Collection } = require('discord.js')
 const config = require('./config.json')
 
 function longFormChannelName(name) {
@@ -54,6 +55,40 @@ function totalString(total) {
   return stringTotal
 }
 
+async function fetchMore(channel, limit = 1000) {
+  if (!channel) {
+    throw new Error(`Expected channel, got ${typeof channel}.`);
+  }
+  if (limit <= 100) {
+    return channel.messages.fetch({ limit });
+  }
+
+  let collection = new Collection();
+  let lastId = null;
+  let options = {};
+  let remaining = limit;
+
+  while (remaining > 0) {
+    options.limit = remaining > 100 ? 100 : remaining;
+    remaining = remaining > 100 ? remaining - 100 : 0;
+
+    if (lastId) {
+      options.before = lastId;
+    }
+
+    let messages = await channel.messages.fetch(options);
+
+    if (!messages.last()) {
+      break;
+    }
+
+    collection = collection.concat(messages);
+    lastId = messages.last().id;
+  }
+
+  return collection;
+}
+
 
 exports.longFormChannelName = longFormChannelName
 exports.splitContent = splitContent
@@ -61,3 +96,4 @@ exports.countMissions = countMissions
 exports.wait = wait
 exports.addOrReplace = addOrReplace
 exports.totalString = totalString
+exports.fetchMore = fetchMore

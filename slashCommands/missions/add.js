@@ -3,7 +3,7 @@ const client = require("../../index")
 require("dotenv").config();
 const persistance = require("../../persistance")
 const config = require('../../config')
-const { longFormChannelName, countMissions } = require("../../utils");
+const { longFormChannelName, countMissions, fetchMore } = require("../../utils");
 const { channel } = require("diagnostics_channel");
 
 const missionCount = []
@@ -87,9 +87,9 @@ module.exports = {
 
       const forum = await interaction.member.guild.channels.cache.get(channelId)
 
-      const userMessages = await forum.messages.fetch().then(ms => {
-        return ms.filter(m => m.author.id === process.env.CLIENT_ID && m.content.startsWith('user: ' + interaction.user.tag))
-      })
+      const messages = await fetchMore(forum)
+
+      const userMessages = await messages.filter(m => m.author.id === process.env.CLIENT_ID && m.content.startsWith('user: ' + interaction.user.tag))
 
       const lastMissionCount = +countMissions(await userMessages) + +completed
 

@@ -87,6 +87,17 @@ module.exports = {
 
       const forum = await interaction.member.guild.channels.cache.get(channelId)
 
+      if(!forum) {
+        const embed = new EmbedBuilder()
+        .setColor("#FF0000")
+        .setTitle("Invalid Push Selected")
+        .setDescription('The push/channel ' + channelId + ' does not exist')
+        .setTimestamp()
+        .setFooter({ text: `Requested by ${interaction.user.tag}`, iconURL: `${interaction.user.displayAvatarURL()}` })
+      interaction.reply({ embeds: [embed] });
+      return
+      }
+
       const messages = await fetchMore(forum)
 
       const userMessages = await messages.filter(m => m.author.id === process.env.CLIENT_ID && m.content.startsWith('user: ' + interaction.user.tag))
